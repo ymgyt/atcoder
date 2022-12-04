@@ -1,0 +1,51 @@
+[package]
+name = "abc278"
+version = "0.1.0"
+edition = "2018"
+
+[package.metadata.cargo-compete.bin]
+abc278-a = { alias = "a", problem = "https://atcoder.jp/contests/abc278/tasks/abc278_a" }
+abc278-b = { alias = "b", problem = "https://atcoder.jp/contests/abc278/tasks/abc278_b" }
+abc278-c = { alias = "c", problem = "https://atcoder.jp/contests/abc278/tasks/abc278_c" }
+abc278-d = { alias = "d", problem = "https://atcoder.jp/contests/abc278/tasks/abc278_d" }
+abc278-e = { alias = "e", problem = "https://atcoder.jp/contests/abc278/tasks/abc278_e" }
+abc278-ex = { alias = "ex", problem = "https://atcoder.jp/contests/abc278/tasks/abc278_h" }
+abc278-f = { alias = "f", problem = "https://atcoder.jp/contests/abc278/tasks/abc278_f" }
+abc278-g = { alias = "g", problem = "https://atcoder.jp/contests/abc278/tasks/abc278_g" }
+
+[[bin]]
+name = "abc278-a"
+path = "src/bin/a.rs"
+
+[[bin]]
+name = "abc278-b"
+path = "src/bin/b.rs"
+
+[[bin]]
+name = "abc278-c"
+path = "src/bin/c.rs"
+
+[[bin]]
+name = "abc278-d"
+path = "src/bin/d.rs"
+
+[[bin]]
+name = "abc278-e"
+path = "src/bin/e.rs"
+
+[[bin]]
+name = "abc278-ex"
+path = "src/bin/ex.rs"
+
+[[bin]]
+name = "abc278-f"
+path = "src/bin/f.rs"
+
+[[bin]]
+name = "abc278-g"
+path = "src/bin/g.rs"
+
+[dependencies]
+itertools = "0.10.5"
+
+[dev-dependencies]
