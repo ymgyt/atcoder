@@ -1,4 +1,6 @@
-use std::collections::HashSet;
+use std::cmp;
+use std::collections::HashMap;
+use std::iter::FromIterator;
 
 pub mod cio {
     use std::fmt::{self, Debug};
@@ -300,13 +302,44 @@ fn main() {
     let stdin = std::io::stdin();
     let mut scanner = cio::Scanner::from(&stdin);
 
-    let n = scanner.scan();
-    let mut h = HashSet::new();
+    let n = scanner.scan::<usize>();
+    let mut h = HashMap::<char, i64>::new();
+
     for i in 0..n {
-        let s: String = scanner.scan();
-        match h.insert(s) {
-            true => println!("{}", i + 1),
-            false => (),
+        let s = scanner.scan::<String>();
+        let chars = s.chars().fold(HashMap::new(), |mut h, c| {
+            h.entry(c).and_modify(|n| *n = *n + 1).or_insert(1_i64);
+            h
+        });
+
+        if i == 0 {
+            h = chars;
+        } else {
+            for (c, n1) in h.clone().iter() {
+                match chars.get(c) {
+                    Some(n2) => {
+                        h.entry(*c).and_modify(|n| *n = cmp::min(*n1, *n2));
+                    }
+                    None => {
+                        h.remove(c);
+                    }
+                }
+            }
         }
     }
+
+    let answer = if h.is_empty() {
+        "".to_owned()
+    } else {
+        let mut v = Vec::from_iter(h.into_iter());
+        v.sort_unstable_by(|(c1, _), (c2, _)| {
+            c1.cmp(c2)
+        });
+        v.into_iter().fold(String::new(), |mut s, (c, n)| {
+            s.extend(std::iter::repeat(c).take(n as usize));
+            s
+        })
+    };
+
+    println!("{}", answer);
 }

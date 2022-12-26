@@ -302,11 +302,13 @@ fn main() {
 
     let n = scanner.scan();
     let mut h = HashSet::new();
-    for i in 0..n {
-        let s: String = scanner.scan();
-        match h.insert(s) {
-            true => println!("{}", i + 1),
-            false => (),
-        }
+    for _ in 0..n {
+        let s: i64 = scanner.scan();
+        match h.get(&s) {
+            Some(_) => h.remove(&s),
+            None => h.insert(s),
+        };
     }
+
+    println!("{}", h.len());
 }

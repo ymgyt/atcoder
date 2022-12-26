@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 pub mod cio {
     use std::fmt::{self, Debug};
@@ -300,13 +300,20 @@ fn main() {
     let stdin = std::io::stdin();
     let mut scanner = cio::Scanner::from(&stdin);
 
-    let n = scanner.scan();
-    let mut h = HashSet::new();
-    for i in 0..n {
-        let s: String = scanner.scan();
-        match h.insert(s) {
-            true => println!("{}", i + 1),
-            false => (),
+    let n = scanner.scan::<usize>();
+    let v = scanner.collect::<i64>(n);
+
+    let answer = v.into_iter().fold(HashMap::<i64, usize>::new(), |mut h, n| {
+        h.entry(n).and_modify(|n| *n = *n + 1).or_insert(1);
+        h
+    }).into_iter().fold(0, |acc, (n,m)| {
+        let m = m as i64;
+        acc + if n <= m {
+            m - n
+        } else {
+           m
         }
-    }
+    });
+
+    println!("{}", answer);
 }

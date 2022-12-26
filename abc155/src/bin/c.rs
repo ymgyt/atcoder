@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 pub mod cio {
     use std::fmt::{self, Debug};
@@ -301,12 +301,17 @@ fn main() {
     let mut scanner = cio::Scanner::from(&stdin);
 
     let n = scanner.scan();
-    let mut h = HashSet::new();
-    for i in 0..n {
-        let s: String = scanner.scan();
-        match h.insert(s) {
-            true => println!("{}", i + 1),
-            false => (),
+    let mut v = scanner.collect::<String>(n).into_iter().fold(HashMap::new(), |mut h, s| {
+        h.entry(s).and_modify(|n| *n = *n + 1).or_insert(1);
+        h
+    }).into_iter().collect::<Vec<(String, i64)>>();
+    v.sort_unstable_by(|(s1, c1), (s2, c2)| {
+        if c1 == c2 {
+            s1.cmp(s2)
+        } else {
+            c2.cmp(c1)
         }
-    }
+    });
+    let max = v.get(0).unwrap().1;
+    v.into_iter().take_while(|(_, c)| *c == max).for_each(|(s, _)| println!("{}", s));
 }
