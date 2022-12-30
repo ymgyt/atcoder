@@ -62,8 +62,8 @@ pub mod cio {
     }
 
     impl<R> Scanner<R>
-        where
-            R: BufRead,
+    where
+        R: BufRead,
     {
         fn new(reader: R) -> Self {
             Self {
@@ -74,9 +74,9 @@ pub mod cio {
         }
 
         pub fn scan<T>(&mut self) -> T
-            where
-                T: FromStr,
-                <T as FromStr>::Err: Debug,
+        where
+            T: FromStr,
+            <T as FromStr>::Err: Debug,
         {
             match self.try_scan() {
                 Ok(v) => v,
@@ -85,9 +85,9 @@ pub mod cio {
         }
 
         pub fn try_scan<T>(&mut self) -> Result<T>
-            where
-                T: FromStr,
-                <T as FromStr>::Err: Debug,
+        where
+            T: FromStr,
+            <T as FromStr>::Err: Debug,
         {
             if self.buf.is_empty() {
                 self.fill_buf()?;
@@ -122,9 +122,9 @@ pub mod cio {
         }
 
         pub fn collect<T>(&mut self, size: usize) -> Vec<T>
-            where
-                T: FromStr,
-                <T as FromStr>::Err: Debug,
+        where
+            T: FromStr,
+            <T as FromStr>::Err: Debug,
         {
             match self.try_collect(size) {
                 Ok(vec) => vec,
@@ -133,9 +133,9 @@ pub mod cio {
         }
 
         pub fn try_collect<T>(&mut self, size: usize) -> Result<Vec<T>, Error>
-            where
-                T: FromStr,
-                <T as FromStr>::Err: Debug,
+        where
+            T: FromStr,
+            <T as FromStr>::Err: Debug,
         {
             let mut vec = Vec::with_capacity(size);
 
@@ -147,11 +147,11 @@ pub mod cio {
         }
 
         pub fn tuple_2<T1, T2>(&mut self) -> (T1, T2)
-            where
-                T1: FromStr,
-                T2: FromStr,
-                <T1 as FromStr>::Err: Debug,
-                <T2 as FromStr>::Err: Debug,
+        where
+            T1: FromStr,
+            T2: FromStr,
+            <T1 as FromStr>::Err: Debug,
+            <T2 as FromStr>::Err: Debug,
         {
             match self.try_tuple_2::<T1, T2>() {
                 Ok(v) => v,
@@ -160,23 +160,23 @@ pub mod cio {
         }
 
         pub fn try_tuple_2<T1, T2>(&mut self) -> Result<(T1, T2), Error>
-            where
-                T1: FromStr,
-                T2: FromStr,
-                <T1 as FromStr>::Err: Debug,
-                <T2 as FromStr>::Err: Debug,
+        where
+            T1: FromStr,
+            T2: FromStr,
+            <T1 as FromStr>::Err: Debug,
+            <T2 as FromStr>::Err: Debug,
         {
             Ok((self.try_scan::<T1>()?, self.try_scan::<T2>()?))
         }
 
         pub fn tuple_3<T1, T2, T3>(&mut self) -> (T1, T2, T3)
-            where
-                T1: FromStr,
-                T2: FromStr,
-                T3: FromStr,
-                <T1 as FromStr>::Err: Debug,
-                <T2 as FromStr>::Err: Debug,
-                <T3 as FromStr>::Err: Debug,
+        where
+            T1: FromStr,
+            T2: FromStr,
+            T3: FromStr,
+            <T1 as FromStr>::Err: Debug,
+            <T2 as FromStr>::Err: Debug,
+            <T3 as FromStr>::Err: Debug,
         {
             match self.try_tuple_3::<T1, T2, T3>() {
                 Ok(v) => v,
@@ -185,13 +185,13 @@ pub mod cio {
         }
 
         pub fn try_tuple_3<T1, T2, T3>(&mut self) -> Result<(T1, T2, T3), Error>
-            where
-                T1: FromStr,
-                T2: FromStr,
-                T3: FromStr,
-                <T1 as FromStr>::Err: Debug,
-                <T2 as FromStr>::Err: Debug,
-                <T3 as FromStr>::Err: Debug,
+        where
+            T1: FromStr,
+            T2: FromStr,
+            T3: FromStr,
+            <T1 as FromStr>::Err: Debug,
+            <T2 as FromStr>::Err: Debug,
+            <T3 as FromStr>::Err: Debug,
         {
             Ok((
                 self.try_scan::<T1>()?,
@@ -298,18 +298,18 @@ fn main() {
     let stdin = std::io::stdin();
     let mut scanner = cio::Scanner::from(&stdin);
 
-    let (n,p,q) = scanner.tuple_3::<usize,u64,u64 >();
+    let (n, p, q) = scanner.tuple_3::<usize, u64, u64>();
     let v = scanner.collect::<u64>(n);
     let mut answer = 0;
 
     for a in 0..n {
-        for b in a+1..n {
-            for c in b+1..n {
-                for d in c+1..n {
-                    for e in d+1..n {
-                       if v[a] % p * v[b] %p * v[c] % p * v[d] %p * v[e] %p  == q {
-                           answer +=1;
-                       }
+        for b in a + 1..n {
+            for c in b + 1..n {
+                for d in c + 1..n {
+                    for e in d + 1..n {
+                        if v[a] % p * v[b] % p * v[c] % p * v[d] % p * v[e] % p == q {
+                            answer += 1;
+                        }
                     }
                 }
             }
