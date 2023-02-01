@@ -1,3 +1,5 @@
+use std::cmp;
+
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -305,25 +307,19 @@ pub mod cio {
 fn main() {
     cio::setup!(scanner);
     let n = scanner.scan::<usize>();
-    let mut sum_1 = vec![0; n + 1];
-    let mut sum_2 = vec![0; n + 1];
-    for i in 0..n {
-        let (c, p) = scanner.tuple_2::<usize, usize>();
-        let (v1, v2) = match c {
-            1 => (p, 0),
-            2 => (0, p),
-            _ => unreachable!(),
-        };
-        sum_1[i + 1] = sum_1[i] + v1;
-        sum_2[i + 1] = sum_2[i] + v2;
+    let v = scanner.collect::<usize>(n);
+    let mut s: Vec<usize> = vec![0; n + 1];
+    for i in 1..=n {
+        s[i] = s[i - 1] + v[i - 1];
     }
+    for i in 0..n {
+        let mut ans = 0;
+        let mut j = i;
+        while j < n {
+            ans = cmp::max(ans, s[j + 1] - s[j - i]);
+            j += 1;
+        }
 
-    let q = scanner.scan::<usize>();
-    for _ in 0..q {
-        let (l, r) = scanner.tuple_2::<usize, usize>();
-        let (l, r) = (l - 1, r - 1);
-        let a = sum_1[r + 1] - sum_1[l];
-        let b = sum_2[r + 1] - sum_2[l];
-        println!("{} {}", a, b);
+        println!("{}", ans);
     }
 }

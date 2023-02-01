@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -304,26 +306,37 @@ pub mod cio {
 
 fn main() {
     cio::setup!(scanner);
-    let n = scanner.scan::<usize>();
-    let mut sum_1 = vec![0; n + 1];
-    let mut sum_2 = vec![0; n + 1];
-    for i in 0..n {
-        let (c, p) = scanner.tuple_2::<usize, usize>();
-        let (v1, v2) = match c {
-            1 => (p, 0),
-            2 => (0, p),
-            _ => unreachable!(),
-        };
-        sum_1[i + 1] = sum_1[i] + v1;
-        sum_2[i + 1] = sum_2[i] + v2;
+    let (n, m) = scanner.tuple_2::<usize, usize>();
+    let mut edges: Vec<(usize, usize)> = Vec::with_capacity(m);
+    let mut g: Vec<Vec<usize>> = vec![Vec::new(); n];
+    for _ in 0..m {
+        let (a, b) = scanner.tuple_2::<usize, usize>();
+        let (a, b) = (a - 1, b - 1);
+        edges.push((a, b));
+        g[a].push(b);
+        g[b].push(a);
+    }
+    let mut ans = 0;
+    for i in 0..m {
+        let mut g = g.clone();
+        let edge = edges[i];
+        g[edge.0].retain(|x| *x != edge.1);
+        g[edge.1].retain(|x| *x != edge.0);
+        let mut queue = VecDeque::new();
+        let mut seen: Vec<bool> = vec![false; n];
+        queue.push_front(0);
+
+        while let Some(v) = queue.pop_back() {
+            if seen[v] {
+                continue;
+            }
+            seen[v] = true;
+            queue.extend(g[v].iter().filter(|x| !seen[**x]));
+        }
+        if seen.iter().any(|x| !*x) {
+            ans += 1;
+        }
     }
 
-    let q = scanner.scan::<usize>();
-    for _ in 0..q {
-        let (l, r) = scanner.tuple_2::<usize, usize>();
-        let (l, r) = (l - 1, r - 1);
-        let a = sum_1[r + 1] - sum_1[l];
-        let b = sum_2[r + 1] - sum_2[l];
-        println!("{} {}", a, b);
-    }
+    println!("{}", ans);
 }

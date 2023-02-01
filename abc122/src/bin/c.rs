@@ -1,3 +1,5 @@
+use ascii::{AsciiChar, AsciiString};
+
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -304,26 +306,21 @@ pub mod cio {
 
 fn main() {
     cio::setup!(scanner);
-    let n = scanner.scan::<usize>();
-    let mut sum_1 = vec![0; n + 1];
-    let mut sum_2 = vec![0; n + 1];
-    for i in 0..n {
-        let (c, p) = scanner.tuple_2::<usize, usize>();
-        let (v1, v2) = match c {
-            1 => (p, 0),
-            2 => (0, p),
-            _ => unreachable!(),
+    let (n, q) = scanner.tuple_2::<usize, usize>();
+    let s: AsciiString = scanner.scan();
+    let mut sum: Vec<usize> = vec![0; n];
+    for i in 1..n {
+        let v = if s[i - 1] == AsciiChar::A && s[i] == AsciiChar::C {
+            sum[i - 1] + 1
+        } else {
+            sum[i - 1]
         };
-        sum_1[i + 1] = sum_1[i] + v1;
-        sum_2[i + 1] = sum_2[i] + v2;
+        sum[i] = v;
     }
 
-    let q = scanner.scan::<usize>();
     for _ in 0..q {
         let (l, r) = scanner.tuple_2::<usize, usize>();
-        let (l, r) = (l - 1, r - 1);
-        let a = sum_1[r + 1] - sum_1[l];
-        let b = sum_2[r + 1] - sum_2[l];
-        println!("{} {}", a, b);
+        let ans = sum[r - 1] - sum[l - 1];
+        println!("{}", ans);
     }
 }
