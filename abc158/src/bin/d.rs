@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::collections::VecDeque;
 
 pub mod cio {
@@ -305,30 +304,77 @@ pub mod cio {
     pub(crate) use setup;
 }
 
+#[derive(PartialEq)]
+enum State {
+    Normal,
+    Reverse,
+}
+
+struct Ops {
+    data: VecDeque<char>,
+    state: State,
+}
+
+impl Ops {
+    fn reverse(&mut self) {
+        self.state = if self.state == State::Normal {
+            State::Reverse
+        } else {
+            State::Normal
+        };
+    }
+
+    fn add_front(&mut self, c: char) {
+        match self.state {
+            State::Normal => self.data.push_front(c),
+            State::Reverse => self.data.push_back(c),
+        }
+    }
+
+    fn add_back(&mut self, c: char) {
+        match self.state {
+            State::Normal => self.data.push_back(c),
+            State::Reverse => self.data.push_front(c),
+        }
+    }
+
+    fn print(&self) -> String {
+        let iter = self.data.iter();
+        if self.state == State::Normal {
+            iter.collect()
+        } else {
+            iter.rev().collect()
+        }
+    }
+}
+
 fn main() {
     cio::setup!(scanner);
 
-    let (n, m) = scanner.tuple_2::<usize, usize>();
-    let mut adj = vec![Vec::new(); n];
-    for _ in 0..m {
-        let (a, b) = scanner.tuple_2::<usize, usize>();
-        let (a, b) = (a - 1, b - 1);
-        adj[a].push(b);
-    }
+    let s = scanner.scan::<String>();
+    let q = scanner.scan::<usize>();
 
-    let mut pairs = 0;
-    let mut queue = VecDeque::new();
-    for curr in 0..n {
-        let mut seen = HashSet::new();
-        queue.push_back(curr);
+    let mut ops = Ops {
+        data: VecDeque::new(),
+        state: State::Normal,
+    };
 
-        while let Some(curr) = queue.pop_front() {
-            let first_time = seen.insert(curr);
-            if first_time {
-                queue.extend(&adj[curr])
+    s.chars().for_each(|c| ops.add_back(c));
+
+    for _ in 0..q {
+        match scanner.scan::<usize>() {
+            1 => ops.reverse(),
+            2 => {
+                let (f, c) = scanner.tuple_2::<usize, char>();
+                match f {
+                    1 => ops.add_front(c),
+                    2 => ops.add_back(c),
+                    _ => unreachable!(),
+                }
             }
+            _ => unreachable!(),
         }
-        pairs += seen.len();
     }
-    println!("{}", pairs);
+
+    println!("{}", ops.print());
 }

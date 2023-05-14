@@ -1,6 +1,3 @@
-use std::collections::HashSet;
-use std::collections::VecDeque;
-
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -308,27 +305,19 @@ pub mod cio {
 fn main() {
     cio::setup!(scanner);
 
-    let (n, m) = scanner.tuple_2::<usize, usize>();
-    let mut adj = vec![Vec::new(); n];
-    for _ in 0..m {
-        let (a, b) = scanner.tuple_2::<usize, usize>();
-        let (a, b) = (a - 1, b - 1);
-        adj[a].push(b);
+    let n = scanner.scan::<usize>();
+    let h = scanner.collect::<i64>(n);
+    let mut cost = vec![0; n];
+
+    cost[1] = (h[0] - h[1]).abs();
+
+    for i in 2..n {
+        cost[i] = {
+            let cost_1 = (h[i] - h[i - 1]).abs() + cost[i - 1];
+            let cost_2 = (h[i] - h[i - 2]).abs() + cost[i - 2];
+            std::cmp::min(cost_1, cost_2)
+        };
     }
 
-    let mut pairs = 0;
-    let mut queue = VecDeque::new();
-    for curr in 0..n {
-        let mut seen = HashSet::new();
-        queue.push_back(curr);
-
-        while let Some(curr) = queue.pop_front() {
-            let first_time = seen.insert(curr);
-            if first_time {
-                queue.extend(&adj[curr])
-            }
-        }
-        pairs += seen.len();
-    }
-    println!("{}", pairs);
+    println!("{}", cost[n - 1]);
 }

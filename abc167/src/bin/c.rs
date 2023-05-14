@@ -1,6 +1,3 @@
-use std::collections::HashSet;
-use std::collections::VecDeque;
-
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -308,27 +305,39 @@ pub mod cio {
 fn main() {
     cio::setup!(scanner);
 
-    let (n, m) = scanner.tuple_2::<usize, usize>();
-    let mut adj = vec![Vec::new(); n];
-    for _ in 0..m {
-        let (a, b) = scanner.tuple_2::<usize, usize>();
-        let (a, b) = (a - 1, b - 1);
-        adj[a].push(b);
+    let (n, m, x) = scanner.tuple_3::<i64, i64, i64>();
+    let mut costs = Vec::with_capacity(n as usize);
+    let mut a = Vec::with_capacity(n as usize);
+    for _ in 0..n {
+        costs.push(scanner.scan::<i64>());
+        a.push(scanner.collect::<i64>(m as usize));
     }
+    let mut min_cost = None;
 
-    let mut pairs = 0;
-    let mut queue = VecDeque::new();
-    for curr in 0..n {
-        let mut seen = HashSet::new();
-        queue.push_back(curr);
+    for c in 0..(1 << n) {
+        let mut cost = 0;
+        let mut score = vec![0; m as usize];
 
-        while let Some(curr) = queue.pop_front() {
-            let first_time = seen.insert(curr);
-            if first_time {
-                queue.extend(&adj[curr])
+        for j in 0..n {
+            if (c >> j) & 1 == 1 {
+                cost += costs[j as usize];
+                for i in 0..m {
+                    score[i as usize] = score[i as usize] + a[j as usize][i as usize];
+                }
             }
         }
-        pairs += seen.len();
+
+        if score.iter().all(|&n| n >= x) {
+            match min_cost {
+                Some(other) => min_cost = Some(std::cmp::min(other, cost)),
+                None => min_cost = Some(cost),
+            }
+        }
     }
-    println!("{}", pairs);
+
+    let answer = match min_cost {
+        Some(cost) => cost,
+        None => -1,
+    };
+    println!("{}", answer);
 }
