@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -301,40 +303,73 @@ pub mod cio {
     }
     pub(crate) use setup;
 }
-#[derive(Default)]
-struct Item {
-    value: u64,
-    weight: u64,
-}
 fn main() {
     cio::setup!(scanner);
 
-    let (n, w) = scanner.tuple_2::<usize, usize>();
-    let mut items = Vec::with_capacity(n);
-    (0..n).into_iter().for_each(|_| {
-        let (weight, value) = scanner.tuple_2::<u64, u64>();
-        items.push(Item { weight, value });
-    });
+    let (height, width) = scanner.tuple_2::<usize, usize>();
+    let mut maze = Vec::with_capacity(height);
 
-    let mut dp = vec![vec![0; w + 1]; n];
-    for item in 0..n {
-        let Item { value, weight } = items[item];
-        let weight = weight as usize;
+    for _ in 0..height {
+        let row = scanner.scan::<String>();
+        let row = row.chars().collect::<Vec<char>>();
+        maze.push(row);
+    }
 
-        for remain in 0..=w {
-            if item == 0 {
-                dp[item][remain] = if weight <= remain { value } else { 0 };
-                continue;
+    struct Move {
+        x: usize,
+        y: usize,
+        steps: usize,
+    }
+
+    let mut max_steps = 0;
+    let dh = vec![1, 0, -1, 0];
+    let dw = vec![0, 1, 0, -1];
+
+    let check = |x, y| {
+        let mut seen = vec![vec![-1; width]; height];
+        let mut queue = VecDeque::new();
+
+        queue.push_back(Move { x, y, steps: 0 });
+
+        while let Some(Move { x, y, steps }) = queue.pop_front() {
+            seen[y][x] = steps as i64;
+
+            for i in 0..4 {
+                let new_y = y as i64 + dh[i];
+                let new_x = x as i64 + dw[i];
+
+                if new_y < 0 || new_y >= height as i64 || new_x < 0 || new_x >= width as i64 {
+                    continue;
+                }
+                let new_y = new_y as usize;
+                let new_x = new_x as usize;
+                if maze[new_y][new_x] != '.' || seen[new_y][new_x] != -1 {
+                    continue;
+                }
+                queue.push_back(Move {
+                    x: new_x,
+                    y: new_y,
+                    steps: steps + 1,
+                });
             }
+        }
 
-            let mut chise = dp[item - 1][remain];
-            if weight <= remain {
-                chise = std::cmp::max(chise, value + dp[item - 1][remain - weight]);
+        let mut max_steps = 0;
+        for h in 0..height {
+            for w in 0..width {
+                max_steps = std::cmp::max(max_steps, seen[h][w]);
             }
-            dp[item][remain] = chise;
+        }
+        max_steps
+    };
+
+    for h in 0..height {
+        for w in 0..width {
+            if maze[h][w] == '.' {
+                max_steps = std::cmp::max(max_steps, check(w, h));
+            }
         }
     }
 
-    let ans = dp[n - 1][w];
-    println!("{}", ans);
+    println!("{}", max_steps);
 }

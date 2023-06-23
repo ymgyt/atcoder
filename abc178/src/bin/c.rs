@@ -301,40 +301,14 @@ pub mod cio {
     }
     pub(crate) use setup;
 }
-#[derive(Default)]
-struct Item {
-    value: u64,
-    weight: u64,
-}
+
 fn main() {
     cio::setup!(scanner);
 
-    let (n, w) = scanner.tuple_2::<usize, usize>();
-    let mut items = Vec::with_capacity(n);
-    (0..n).into_iter().for_each(|_| {
-        let (weight, value) = scanner.tuple_2::<u64, u64>();
-        items.push(Item { weight, value });
-    });
-
-    let mut dp = vec![vec![0; w + 1]; n];
-    for item in 0..n {
-        let Item { value, weight } = items[item];
-        let weight = weight as usize;
-
-        for remain in 0..=w {
-            if item == 0 {
-                dp[item][remain] = if weight <= remain { value } else { 0 };
-                continue;
-            }
-
-            let mut chise = dp[item - 1][remain];
-            if weight <= remain {
-                chise = std::cmp::max(chise, value + dp[item - 1][remain - weight]);
-            }
-            dp[item][remain] = chise;
-        }
-    }
-
-    let ans = dp[n - 1][w];
-    println!("{}", ans);
+    let n = scanner.scan::<u64>();
+    let m = 10_u64.pow(9) + 7;
+    let n = (n % m) as u32;
+    let answer =
+        (10_u64.pow(n) % m) - ((9_u64.pow(n) % m) + (9_u64.pow(n) % m) - (8_u64.pow(n) % m));
+    println!("{}", answer);
 }
