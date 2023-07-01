@@ -301,37 +301,16 @@ pub mod cio {
     }
     pub(crate) use setup;
 }
-
 fn main() {
     cio::setup!(scanner);
-    let (n, k) = scanner.tuple_2::<usize, usize>();
-    let a = scanner.collect::<usize>(n);
 
-    let mut moves = 0;
-    let mut visited = vec![None; n + 1];
-    let mut curr_town = 1;
-    visited[1] = Some(0);
-
-    let ans = loop {
-        moves += 1;
-        curr_town = a[curr_town - 1];
-        if moves == k {
-            break curr_town;
+    let a = scanner.collect::<u64>(64);
+    let ans = a.into_iter().enumerate().fold(0, |acc, (i, n)| {
+        if n == 0 {
+            acc
+        } else {
+            acc + 2_u64.pow(i as u32)
         }
-
-        match visited[curr_town] {
-            Some(last_visit) => {
-                let cycle = moves - last_visit;
-                let remain = k - moves;
-                let remain = remain % cycle;
-                for _ in 0..remain {
-                    curr_town = a[curr_town - 1];
-                }
-                break curr_town;
-            }
-            None => visited[curr_town] = Some(moves),
-        }
-    };
-
+    });
     println!("{}", ans);
 }

@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -304,34 +306,54 @@ pub mod cio {
 
 fn main() {
     cio::setup!(scanner);
-    let (n, k) = scanner.tuple_2::<usize, usize>();
-    let a = scanner.collect::<usize>(n);
+    let (n, m) = scanner.tuple_2::<usize, usize>();
+    let mut adj = vec![Vec::new(); n];
+    for _ in 0..m {
+        let (a, b) = scanner.tuple_2::<usize, usize>();
+        let (a, b) = (a - 1, b - 1);
+        adj[a].push(b);
+        adj[b].push(a);
+    }
 
-    let mut moves = 0;
-    let mut visited = vec![None; n + 1];
-    let mut curr_town = 1;
-    visited[1] = Some(0);
+    struct Message {
+        from: usize,
+        to: usize,
+    }
 
-    let ans = loop {
-        moves += 1;
-        curr_town = a[curr_town - 1];
-        if moves == k {
-            break curr_town;
+    let mut guides = vec![None; n];
+    let mut queue = VecDeque::new();
+    queue.push_back(Message { from: 0, to: 0 });
+
+    while let Some(Message { from, to }) = queue.pop_front() {
+        let cur = to;
+        if guides[cur].is_some() {
+            continue;
         }
+        guides[cur] = Some(from + 1);
 
-        match visited[curr_town] {
-            Some(last_visit) => {
-                let cycle = moves - last_visit;
-                let remain = k - moves;
-                let remain = remain % cycle;
-                for _ in 0..remain {
-                    curr_town = a[curr_town - 1];
-                }
-                break curr_town;
+        for &to in &adj[cur] {
+            if guides[to].is_some() {
+                continue;
             }
-            None => visited[curr_town] = Some(moves),
+            queue.push_back(Message { from: cur, to });
         }
-    };
+    }
 
+    let ans = if guides.iter().all(|guide| guide.is_some()) {
+        "Yes"
+    } else {
+        "No"
+    };
     println!("{}", ans);
+    if ans == "Yes" {
+        use itertools::Itertools;
+        println!(
+            "{}",
+            guides
+                .into_iter()
+                .skip(1)
+                .map(|guide| guide.unwrap())
+                .join("\n")
+        );
+    }
 }

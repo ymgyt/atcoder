@@ -304,34 +304,14 @@ pub mod cio {
 
 fn main() {
     cio::setup!(scanner);
-    let (n, k) = scanner.tuple_2::<usize, usize>();
-    let a = scanner.collect::<usize>(n);
 
-    let mut moves = 0;
-    let mut visited = vec![None; n + 1];
-    let mut curr_town = 1;
-    visited[1] = Some(0);
+    let s = scanner.scan::<usize>();
+    let mut v = vec![0_u64; s + 1];
 
-    let ans = loop {
-        moves += 1;
-        curr_town = a[curr_town - 1];
-        if moves == k {
-            break curr_town;
-        }
-
-        match visited[curr_town] {
-            Some(last_visit) => {
-                let cycle = moves - last_visit;
-                let remain = k - moves;
-                let remain = remain % cycle;
-                for _ in 0..remain {
-                    curr_town = a[curr_town - 1];
-                }
-                break curr_town;
-            }
-            None => visited[curr_town] = Some(moves),
-        }
-    };
-
+    for i in 3..=s {
+        let sum = &v[0..i - 2].iter().cloned().sum();
+        v[i] = (sum + 1_u64) % (1000_000_000 + 7);
+    }
+    let ans = v[s];
     println!("{}", ans);
 }

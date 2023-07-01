@@ -301,37 +301,126 @@ pub mod cio {
     }
     pub(crate) use setup;
 }
+pub struct UnionFind {
+    parent: Vec<Option<usize>>,
+    size: Vec<usize>,
+}
+
+#[derive(PartialEq, Eq, Debug)]
+pub enum UnionResult {
+    Unified,
+    AlreadyUnified,
+}
+
+impl UnionFind {
+    /// Create new `UnionFind` of `n` disjoint sets.
+    pub fn new(n: usize) -> Self {
+        Self {
+            parent: vec![None; n],
+            size: vec![1; n],
+        }
+    }
+
+    pub fn union(&mut self, x: usize, y: usize) -> UnionResult {
+        if x == y {
+            return UnionResult::AlreadyUnified;
+        }
+
+        let (large, small) = {
+            let (x, y) = (self.root_with_optimize(x), self.root_with_optimize(y));
+            if x == y {
+                return UnionResult::AlreadyUnified;
+            }
+
+            if self.size(x) >= self.size(y) {
+                (x, y)
+            } else {
+                (y, x)
+            }
+        };
+
+        self.parent[small] = Some(large);
+        self.size[large] += self.size[small];
+        UnionResult::Unified
+    }
+
+    /// Returns `true` if the given elements belong to the same set
+    /// and returns `false` otherwise.
+    pub fn equiv(&self, x: usize, y: usize) -> bool {
+        self.root(x) == self.root(y)
+    }
+
+    /// Return the representative for `x`.
+    pub fn root(&self, x: usize) -> usize {
+        let mut curr = x;
+        loop {
+            match self.parent[curr] {
+                Some(parent) => {
+                    curr = parent;
+                }
+                None => return curr,
+            }
+        }
+    }
+
+    fn root_with_optimize(&mut self, x: usize) -> usize {
+        let mut curr = x;
+        loop {
+            match self.parent[curr] {
+                Some(parent) => {
+                    self.parent[x] = Some(parent);
+                    curr = parent;
+                }
+                None => return curr,
+            }
+        }
+    }
+
+    pub fn size(&self, x: usize) -> usize {
+        self.size[x]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn case_1() {
+        let mut uf = UnionFind::new(3);
+
+        assert_eq!(uf.root(0), 0);
+        assert_eq!(uf.root(1), 1);
+        assert_eq!(uf.root(2), 2);
+
+        assert!(!uf.equiv(0, 1));
+        assert!(!uf.equiv(1, 2));
+        assert!(!uf.equiv(2, 0));
+
+        assert_eq!(uf.size(0), 1);
+        assert_eq!(uf.size(1), 1);
+        assert_eq!(uf.size(2), 1);
+
+        assert_eq!(uf.union(0, 1), UnionResult::Unified);
+        assert!(uf.equiv(0, 1));
+        assert_eq!(uf.size(0), 2);
+    }
+}
 
 fn main() {
     cio::setup!(scanner);
-    let (n, k) = scanner.tuple_2::<usize, usize>();
-    let a = scanner.collect::<usize>(n);
 
-    let mut moves = 0;
-    let mut visited = vec![None; n + 1];
-    let mut curr_town = 1;
-    visited[1] = Some(0);
+    let (n, m) = scanner.tuple_2::<usize, usize>();
+    let mut uf = UnionFind::new(n);
+    for _ in 0..m {
+        let (a, b) = scanner.tuple_2::<usize, usize>();
+        uf.union(a - 1, b - 1);
+    }
 
-    let ans = loop {
-        moves += 1;
-        curr_town = a[curr_town - 1];
-        if moves == k {
-            break curr_town;
-        }
+    let mut max = 0;
+    for i in 0..n {
+        max = std::cmp::max(max, uf.size(i));
+    }
 
-        match visited[curr_town] {
-            Some(last_visit) => {
-                let cycle = moves - last_visit;
-                let remain = k - moves;
-                let remain = remain % cycle;
-                for _ in 0..remain {
-                    curr_town = a[curr_town - 1];
-                }
-                break curr_town;
-            }
-            None => visited[curr_town] = Some(moves),
-        }
-    };
-
-    println!("{}", ans);
+    println!("{}", max);
 }

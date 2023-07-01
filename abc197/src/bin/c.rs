@@ -304,34 +304,36 @@ pub mod cio {
 
 fn main() {
     cio::setup!(scanner);
-    let (n, k) = scanner.tuple_2::<usize, usize>();
-    let a = scanner.collect::<usize>(n);
 
-    let mut moves = 0;
-    let mut visited = vec![None; n + 1];
-    let mut curr_town = 1;
-    visited[1] = Some(0);
+    let n = scanner.scan::<usize>();
+    let a = scanner.collect::<u64>(n);
 
-    let ans = loop {
-        moves += 1;
-        curr_town = a[curr_town - 1];
-        if moves == k {
-            break curr_town;
+    let mut ans = std::u64::MAX;
+    for b in 0..(1 << n + 1) {
+        if b & 0x01 != 1 || (b >> n) & 0x01 != 1 {
+            continue;
         }
-
-        match visited[curr_town] {
-            Some(last_visit) => {
-                let cycle = moves - last_visit;
-                let remain = k - moves;
-                let remain = remain % cycle;
-                for _ in 0..remain {
-                    curr_town = a[curr_town - 1];
-                }
-                break curr_town;
+        let mut xor_result = None;
+        let mut i = 0;
+        while i < n {
+            let mut j = i + 1;
+            while (b >> j) & 0x01 == 0 {
+                j += 1;
             }
-            None => visited[curr_town] = Some(moves),
+            let mut or_result = None;
+            for or_idx in i..j {
+                or_result = match or_result {
+                    None => Some(a[or_idx]),
+                    Some(or_result) => Some(or_result | a[or_idx]),
+                }
+            }
+            xor_result = match xor_result {
+                None => Some(or_result.unwrap()),
+                Some(xor_result) => Some(xor_result ^ or_result.unwrap()),
+            };
+            i = j;
         }
-    };
-
+        ans = std::cmp::min(ans, xor_result.unwrap());
+    }
     println!("{}", ans);
 }

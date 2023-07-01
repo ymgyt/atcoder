@@ -301,37 +301,23 @@ pub mod cio {
     }
     pub(crate) use setup;
 }
-
 fn main() {
     cio::setup!(scanner);
-    let (n, k) = scanner.tuple_2::<usize, usize>();
-    let a = scanner.collect::<usize>(n);
 
-    let mut moves = 0;
-    let mut visited = vec![None; n + 1];
-    let mut curr_town = 1;
-    visited[1] = Some(0);
-
-    let ans = loop {
-        moves += 1;
-        curr_town = a[curr_town - 1];
-        if moves == k {
-            break curr_town;
-        }
-
-        match visited[curr_town] {
-            Some(last_visit) => {
-                let cycle = moves - last_visit;
-                let remain = k - moves;
-                let remain = remain % cycle;
-                for _ in 0..remain {
-                    curr_town = a[curr_town - 1];
-                }
-                break curr_town;
-            }
-            None => visited[curr_town] = Some(moves),
-        }
+    let n = scanner.scan::<usize>();
+    let a = scanner.collect::<i64>(n * 3);
+    let f = |n: i64| -> usize {
+        a.iter()
+            .enumerate()
+            .filter(|(_, &m)| n == m)
+            .nth(1)
+            .unwrap()
+            .0
     };
 
+    let mut b: Vec<_> = (1..=n).into_iter().map(|n| (n, f(n as i64))).collect();
+    b.sort_unstable_by_key(|(_, f)| *f);
+    use itertools::Itertools;
+    let ans = b.into_iter().map(|(n, _)| n).join(" ");
     println!("{}", ans);
 }

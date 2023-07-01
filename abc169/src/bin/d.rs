@@ -1,3 +1,5 @@
+use num_integer::Roots;
+
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -302,36 +304,48 @@ pub mod cio {
     pub(crate) use setup;
 }
 
+fn primes(n: usize) -> Vec<usize> {
+    let mut p = Vec::new();
+    let mut i = 2;
+    let mut num = n;
+    while i <= n.sqrt() {
+        if num % i == 0 {
+            p.push(i);
+            num /= i
+        } else {
+            i += 1;
+        }
+    }
+    if num != 1 {
+        p.push(num);
+    }
+    p
+}
+
 fn main() {
     cio::setup!(scanner);
-    let (n, k) = scanner.tuple_2::<usize, usize>();
-    let a = scanner.collect::<usize>(n);
 
-    let mut moves = 0;
-    let mut visited = vec![None; n + 1];
-    let mut curr_town = 1;
-    visited[1] = Some(0);
-
-    let ans = loop {
-        moves += 1;
-        curr_town = a[curr_town - 1];
-        if moves == k {
-            break curr_town;
-        }
-
-        match visited[curr_town] {
-            Some(last_visit) => {
-                let cycle = moves - last_visit;
-                let remain = k - moves;
-                let remain = remain % cycle;
-                for _ in 0..remain {
-                    curr_town = a[curr_town - 1];
+    let n = scanner.scan::<usize>();
+    let answer = match n {
+        1 => 0,
+        n => {
+            let mut primes = primes(n);
+            primes.dedup();
+            let mut n = n;
+            let mut answer = 0;
+            for p in primes {
+                for e in 1..1000 {
+                    if n % p.pow(e) == 0 {
+                        answer += 1;
+                        n /= p.pow(e);
+                    } else {
+                        break;
+                    }
                 }
-                break curr_town;
             }
-            None => visited[curr_town] = Some(moves),
+            answer
         }
     };
 
-    println!("{}", ans);
+    println!("{}", answer);
 }

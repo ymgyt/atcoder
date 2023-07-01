@@ -1,3 +1,85 @@
+use std::ops::Range;
+
+pub struct SegmentTree<T, F> {
+    size: usize,
+    buf: Vec<T>,
+    sentry: T,
+    f: F,
+}
+
+impl<T, F> SegmentTree<T, F>
+where
+    T: Clone + Copy,
+    F: Fn(T, T) -> T,
+{
+    pub fn new(size: usize, init: T, f: F) -> Self {
+        let size = (size as u64).next_power_of_two() as usize;
+        let buf = vec![init; size * 2];
+
+        Self {
+            size,
+            buf,
+            sentry: init,
+            f,
+        }
+    }
+
+    pub fn from_vec(mut other: Vec<T>, init: T, f: F) -> Self {
+        let pw2 = (other.len() as u64).next_power_of_two() as usize;
+        other.resize(pw2, init);
+        let mut buf = vec![init; pw2];
+        buf.append(&mut other);
+
+        for i in (1..pw2).into_iter().rev() {
+            buf[i] = f(buf[i * 2], buf[i * 2 + 1]);
+        }
+
+        Self {
+            size: pw2,
+            buf,
+            sentry: init,
+            f,
+        }
+    }
+
+    /// Update gienv index to new value.
+    pub fn update(&mut self, index: usize, value: T) {
+        let mut i = index + self.size;
+        self.buf[i] = value;
+
+        while i > 1 {
+            i /= 2; // move to parent
+            self.buf[i] = (self.f)(
+                self.buf[i * 2],     // left child
+                self.buf[i * 2 + 1], // right child
+            )
+        }
+    }
+
+    pub fn query(&self, range: Range<usize>) -> T {
+        let mut left = range.start + self.size; // inclusive
+        let mut right = range.end + self.size; // exclusive
+        let mut v = self.sentry;
+
+        while left < right {
+            if left % 2 == 1 {
+                v = (self.f)(v, self.buf[left]);
+                left += 1;
+            }
+            if right % 2 == 1 {
+                v = (self.f)(v, self.buf[right - 1]);
+                right -= 1;
+            }
+            left /= 2;
+            right /= 2;
+        }
+        v
+    }
+
+    pub fn get(&self, index: usize) -> T {
+        self.buf[index + self.size]
+    }
+}
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -304,34 +386,26 @@ pub mod cio {
 
 fn main() {
     cio::setup!(scanner);
-    let (n, k) = scanner.tuple_2::<usize, usize>();
-    let a = scanner.collect::<usize>(n);
 
-    let mut moves = 0;
-    let mut visited = vec![None; n + 1];
-    let mut curr_town = 1;
-    visited[1] = Some(0);
+    let (n, q) = scanner.tuple_2::<usize, usize>();
+    let a = scanner.collect::<u64>(n);
+    let mut t = SegmentTree::from_vec(a, 0, |a, b| a ^ b);
 
-    let ans = loop {
-        moves += 1;
-        curr_town = a[curr_town - 1];
-        if moves == k {
-            break curr_town;
-        }
-
-        match visited[curr_town] {
-            Some(last_visit) => {
-                let cycle = moves - last_visit;
-                let remain = k - moves;
-                let remain = remain % cycle;
-                for _ in 0..remain {
-                    curr_town = a[curr_town - 1];
-                }
-                break curr_town;
+    for _ in 0..q {
+        match scanner.scan::<usize>() {
+            1 => {
+                let (x, y) = scanner.tuple_2::<usize, u64>();
+                let x = x - 1;
+                let new_val = t.get(x) ^ y;
+                t.update(x, new_val);
             }
-            None => visited[curr_town] = Some(moves),
+            2 => {
+                let (x, y) = scanner.tuple_2::<usize, usize>();
+                let (x, y) = (x - 1, y - 1);
+                let ans = t.query(x..y + 1);
+                println!("{}", ans);
+            }
+            _ => unreachable!(),
         }
-    };
-
-    println!("{}", ans);
+    }
 }
