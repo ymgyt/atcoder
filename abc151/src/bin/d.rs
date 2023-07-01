@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -301,14 +303,73 @@ pub mod cio {
     }
     pub(crate) use setup;
 }
-
 fn main() {
     cio::setup!(scanner);
 
-    let n = scanner.scan::<u64>();
-    let m = 10_u64.pow(9) + 7;
-    let n = (n % m) as u32;
-    let answer =
-        (10_u64.pow(n) % m) - ((9_u64.pow(n) % m) + (9_u64.pow(n) % m) - (8_u64.pow(n) % m));
-    println!("{}", answer);
+    let (height, width) = scanner.tuple_2::<usize, usize>();
+    let mut maze = Vec::with_capacity(height);
+
+    for _ in 0..height {
+        let row = scanner.scan::<String>();
+        let row = row.chars().collect::<Vec<char>>();
+        maze.push(row);
+    }
+
+    struct Move {
+        x: usize,
+        y: usize,
+        steps: usize,
+    }
+
+    let mut max_steps = 0;
+    let dh = vec![1, 0, -1, 0];
+    let dw = vec![0, 1, 0, -1];
+
+    let check = |x, y| {
+        let mut seen = vec![vec![-1; width]; height];
+        let mut queue = VecDeque::new();
+
+        queue.push_back(Move { x, y, steps: 0 });
+
+        while let Some(Move { x, y, steps }) = queue.pop_front() {
+            seen[y][x] = steps as i64;
+
+            for i in 0..4 {
+                let new_y = y as i64 + dh[i];
+                let new_x = x as i64 + dw[i];
+
+                if new_y < 0 || new_y >= height as i64 || new_x < 0 || new_x >= width as i64 {
+                    continue;
+                }
+                let new_y = new_y as usize;
+                let new_x = new_x as usize;
+                if maze[new_y][new_x] != '.' || seen[new_y][new_x] != -1 {
+                    continue;
+                }
+                queue.push_back(Move {
+                    x: new_x,
+                    y: new_y,
+                    steps: steps + 1,
+                });
+            }
+        }
+
+        let mut max_steps = 0;
+        for h in 0..height {
+            for w in 0..width {
+                max_steps = std::cmp::max(max_steps, seen[h][w]);
+            }
+        }
+        max_steps
+    };
+
+    for h in 0..height {
+        for w in 0..width {
+            if maze[h][w] == '.' {
+                max_steps = std::cmp::max(max_steps, check(w, h));
+            }
+        }
+    }
+
+    println!("{}", max_steps);
 }

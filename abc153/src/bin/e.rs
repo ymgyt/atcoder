@@ -1,3 +1,5 @@
+use std::cmp;
+
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -301,14 +303,44 @@ pub mod cio {
     }
     pub(crate) use setup;
 }
-
 fn main() {
     cio::setup!(scanner);
 
-    let n = scanner.scan::<u64>();
-    let m = 10_u64.pow(9) + 7;
-    let n = (n % m) as u32;
-    let answer =
-        (10_u64.pow(n) % m) - ((9_u64.pow(n) % m) + (9_u64.pow(n) % m) - (8_u64.pow(n) % m));
-    println!("{}", answer);
+    let (h, n) = scanner.tuple_2::<usize, usize>();
+    let mut dmgs: Vec<usize> = Vec::with_capacity(n);
+    let mut costs: Vec<usize> = Vec::with_capacity(n);
+
+    (0..n).into_iter().for_each(|_| {
+        let (a, b) = scanner.tuple_2::<usize, usize>();
+        dmgs.push(a);
+        costs.push(b);
+    });
+
+    let mut dp = vec![vec![0; h + 1]; n];
+
+    for i in 0..n {
+        let dmg = dmgs[i];
+        let cost = costs[i];
+
+        if i == 0 {
+            for cur_h in 1..=h {
+                if cur_h <= dmg {
+                    dp[i][cur_h] = cost;
+                } else {
+                    dp[i][cur_h] = dp[i][cur_h - dmg] + cost;
+                }
+            }
+        } else {
+            for cur_h in 1..=h {
+                if cur_h <= dmg {
+                    dp[i][cur_h] = cmp::min(dp[i - 1][cur_h], cost);
+                } else {
+                    dp[i][cur_h] = cmp::min(dp[i - 1][cur_h], dp[i][cur_h - dmg] + cost);
+                }
+            }
+        }
+    }
+
+    let ans = dp[n - 1][h];
+    println!("{}", ans);
 }
