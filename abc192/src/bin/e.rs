@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::cmp::Reverse;
 
 pub mod cio {
     use std::fmt::{self, Debug};
@@ -304,40 +304,114 @@ pub mod cio {
     pub(crate) use setup;
 }
 
+#[derive(Clone, Debug)]
+struct Node {
+    idx: usize,
+    cost_time: Option<usize>,
+    fixed: bool,
+}
+
+impl Node {
+    fn cost_time(&self) -> usize {
+        self.cost_time.unwrap_or(std::usize::MAX)
+    }
+}
+
+#[derive(Clone, Debug)]
+struct Edge {
+    from: usize,
+    to: usize,
+    time_interval: usize,
+    time: usize,
+}
+
+#[derive(PartialEq, Eq)]
+struct Move {
+    to: usize,
+    cost: usize,
+}
+
+impl Ord for Move {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.cost.cmp(&other.cost)
+    }
+}
+
+impl PartialOrd for Move {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cost.cmp(&other.cost))
+    }
+}
+
 fn main() {
     cio::setup!(scanner);
 
     let (n, m) = scanner.tuple_2::<usize, usize>();
-    let mut edges = vec![vec![]; n];
+    let (start, end) = scanner.tuple_2::<usize, usize>();
+    let (start, end) = (start - 1, end - 1);
 
+    let mut nodes = (0..n)
+        .into_iter()
+        .map(|idx| Node {
+            idx,
+            cost_time: None,
+            fixed: false,
+        })
+        .collect::<Vec<Node>>();
+    let mut edges = vec![vec![]; n];
     for _ in 0..m {
         let (a, b) = scanner.tuple_2::<usize, usize>();
-        let (a, b) = (a - 1, b - 1);
-        edges[a].push(b);
+        let (t, k) = scanner.tuple_2::<usize, usize>();
+        let edge = Edge {
+            from: a - 1,
+            to: b - 1,
+            time_interval: k,
+            time: t,
+        };
+        edges[a - 1].push(edge);
+        let edge = Edge {
+            from: b - 1,
+            to: a - 1,
+            time_interval: k,
+            time: t,
+        };
+        edges[b - 1].push(edge);
     }
 
-    let mut ans = 0;
-    let mut queue = VecDeque::new();
+    let mut queue = std::collections::BinaryHeap::new();
 
-    for start in 0..n {
-        let mut seen = vec![false; n];
+    queue.push(Reverse(Move { to: start, cost: 0 }));
 
-        queue.push_back(start);
+    while let Some(Reverse(Move { to: node_idx, cost })) = queue.pop() {
+        if nodes[node_idx].fixed {
+            continue;
+        } else {
+            let mut node = unsafe { nodes.get_unchecked_mut(node_idx) };
+            node.fixed = true;
+            node.cost_time = Some(cost);
+        }
 
-        while let Some(curr) = queue.pop_front() {
-            if seen[curr] {
-                continue;
-            }
-            seen[curr] = true;
-            ans += 1;
+        for edge in &edges[node_idx] {
+            let new_dst_cost = {
+                let wait = match cost % edge.time_interval {
+                    0 => 0,
+                    _ => edge.time_interval - cost % edge.time_interval,
+                };
 
-            for &adj in &edges[curr] {
-                if !seen[adj] {
-                    queue.push_back(adj);
-                }
-            }
+                cost + wait + edge.time
+            };
+
+            queue.push(Reverse(Move {
+                to: edge.to,
+                cost: new_dst_cost,
+            }));
         }
     }
 
+    let goal = nodes[end].clone();
+    let ans = match goal.cost_time {
+        Some(cost) => cost as i64,
+        None => -1,
+    };
     println!("{}", ans);
 }

@@ -1,5 +1,3 @@
-use std::collections::VecDeque;
-
 pub mod cio {
     use std::fmt::{self, Debug};
     use std::io::{BufRead, Cursor, Stdin, StdinLock};
@@ -304,40 +302,44 @@ pub mod cio {
     pub(crate) use setup;
 }
 
+fn combinations(n: usize, r: usize) -> usize {
+    if r > n {
+        0
+    } else {
+        (1..=r).fold(1, |acc, val| acc * (n - val + 1) / val)
+    }
+}
+
+fn find(a: usize, b: usize, base: usize, buf: &mut Vec<char>, k: usize) -> String {
+    // println!("a={a}, b={b}, base={base}, buf={buf:?}");
+    if a == 0 && b == 0 {
+        return buf.iter().cloned().collect();
+    }
+    if a == 0 {
+        buf.push('b');
+        return find(a, b - 1, base, buf, k);
+    }
+    if b == 0 {
+        buf.push('a');
+        return find(a - 1, b, base, buf, k);
+    }
+
+    buf.push('a');
+    let range = base..(base + combinations(a - 1 + b, a - 1));
+    if range.contains(&k) {
+        return find(a - 1, b, base, buf, k);
+    }
+    buf.pop();
+    buf.push('b');
+    return find(a, b - 1, range.end, buf, k);
+}
+
 fn main() {
     cio::setup!(scanner);
+    let (a, b, k) = scanner.tuple_3::<usize, usize, usize>();
 
-    let (n, m) = scanner.tuple_2::<usize, usize>();
-    let mut edges = vec![vec![]; n];
-
-    for _ in 0..m {
-        let (a, b) = scanner.tuple_2::<usize, usize>();
-        let (a, b) = (a - 1, b - 1);
-        edges[a].push(b);
-    }
-
-    let mut ans = 0;
-    let mut queue = VecDeque::new();
-
-    for start in 0..n {
-        let mut seen = vec![false; n];
-
-        queue.push_back(start);
-
-        while let Some(curr) = queue.pop_front() {
-            if seen[curr] {
-                continue;
-            }
-            seen[curr] = true;
-            ans += 1;
-
-            for &adj in &edges[curr] {
-                if !seen[adj] {
-                    queue.push_back(adj);
-                }
-            }
-        }
-    }
+    let mut buf = Vec::new();
+    let ans = find(a, b, 0, &mut buf, k - 1);
 
     println!("{}", ans);
 }
