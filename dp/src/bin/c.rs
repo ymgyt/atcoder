@@ -1,4 +1,4 @@
-use std::cmp::max;
+use std::cmp::{self, max};
 
 pub mod cio {
     use std::fmt::{self, Debug};
@@ -304,44 +304,26 @@ pub mod cio {
     pub(crate) use setup;
 }
 
-fn solve(
-    cur: usize,
-    happy: usize,
-    prev: Option<char>,
-    n: usize,
-    points: &[(usize, usize, usize)],
-) -> usize {
-    if cur == n {
-        return happy;
-    }
-    let next = cur + 1;
-    let mut guess = 0;
-    let (a, b, c) = {
-        let p = points[cur];
-        (p.0, p.1, p.2)
-    };
-
-    if prev != Some('a') {
-        guess = max(guess, solve(next, happy + a, Some('a'), n, points));
-    }
-    if prev != Some('b') {
-        guess = max(guess, solve(next, happy + b, Some('b'), n, points));
-    }
-    if prev != Some('c') {
-        guess = max(guess, solve(next, happy + c, Some('c'), n, points));
-    }
-
-    guess
-}
 fn main() {
     cio::setup!(scanner);
     let n = scanner.scan::<usize>();
     let mut v = Vec::with_capacity(n);
     for _ in 0..n {
         let (a, b, c) = scanner.tuple_3::<usize, usize, usize>();
-        v.push((a, b, c));
+        v.push([a, b, c]);
     }
 
-    let ans = solve(0, 0, None, n, v.as_slice());
+    let mut dp = vec![vec![0_u64; 3]; n + 1];
+    for day in 1..=n {
+        for j in 0..3 {
+            let happy = v[day - 1][j] as u64;
+            dp[day][j] = cmp::max(
+                dp[day - 1][(j + 1) % 3] + happy,
+                dp[day - 1][(j + 2) % 3] + happy,
+            );
+        }
+    }
+
+    let ans = dp[n].iter().max().unwrap();
     println!("{}", ans);
 }
